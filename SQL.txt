@@ -1,0 +1,252 @@
+3-select distinct city from station where mod(id,2)=0 or id%2=0;
+4- SELECT COUNT(CITY) -  COUNT(DISTINCT CITY) FROM STATION;
+5- SELECT CITY, LENGTH(CITY) FROM STATION ORDER BY LENGTH(CITY),CITY LIMIT 1;
+SELECT CITY, LENGTH(CITY) FROM STATION ORDER BY LENGTH(CITY) DESC,CITY LIMIT 1;
+6-SELECT CITY FROM STATION WHERE CITY LIKE 'A%' OR CITY LIKE 'E%' OR CITY LIKE 'I%' OR CITY LIKE 'O%' OR CITY LIKE 'U%';
+             OR
+  SELECT CITY FROM STATION WHERE LEFT(CITY,1) IN ('A','E','I','O','U');
+              OR
+  SELECT CITY FROM STATION WHERE LOWER(LEFT(CITY,1)) IN ('a','e','i','o','u');
+7-SELECT DISTINCT CITY FROM STATION WHERE RIGHT(CITY,1) IN ('A','E','I','O','U');
+8-SELECT CITY FROM STATION WHERE LEFT(CITY,1) IN ('A','E','I','O','U')
+AND RIGHT(CITY,1) IN ('A','E','I','O','U');
+           OR  SUBSTRING(CITY,1,1), SUBSTRING(REVERSE (CITY),1,1)
+9-SELECT DISTINCT CITY FROM STATION WHERE LEFT(CITY,1) NOT IN ('A','E','I','O','U');
+10-SELECT DISTINCT CITY FROM STATION WHERE RIGHT(CITY,1) NOT IN ('A','E','I','O','U');
+11-SELECT DISTINCT CITY FROM STATION WHERE LEFT(CITY,1) NOT IN ('A','E','I','O','U')
+OR RIGHT(CITY,1) NOT IN ('A','E','I','O','U');
+12-SELECT DISTINCT CITY FROM STATION WHERE LEFT(CITY,1) NOT IN ('A','E','I','O','U')
+AND RIGHT(CITY,1) NOT IN ('A','E','I','O','U');
+
+HIGHER THAN 75 MARKS-select name from students where marks>75 order by right(name,3) asc,id ;
+
+EMPLOYEE NAME- SELECT NAME FROM EMPLOYEE ORDER BY NAME;
+
+EMPLOYEE SALARY- SELECT NAME FROM EMPLOYEE WHERE SALARY>2000 AND MONTHS<10 ORDER BY EMPLOYEE_ID ASC;
+------------------------------------------------------------------------------
+Types of triangle -
+select case 
+when a+b<=c or b+c<=a or a+c<=b then 'Not A Triangle'
+when a=b and b=c and c=a then 'Equilateral'
+when a=b or b=c or a=c then 'Isosceles'
+when a!=b and b!=c and c!=a then 'Scalene'
+-- Else 'Scalene'
+end
+from triangles;
+------------------------------------------------------------------------------
+Advance Select-The PADS
+select concat(name,'(',left(occupation,1),')') from occupations order by name;
+select concat('There are a total of ',count(occupation),' ',lower(occupation),
+'s.') from occupations group by occupation order by count(occupation),
+occupation asc;
+------------------------------------------------------------------------------
+Advance Select-Occupations**
+select min(Doctor), min(Professor),min(Singer),min(Actor) from (select count(*) over(partition by occupation order by name) as row_no, if(occupation = 'doctor',name,null) as Doctor, if(occupation = 'professor',name,null) as Professor, if(occupation = 'singer',name,null) as Singer, if(occupation = 'actor',name,null) as Actor from occupations) as derived_table group by row_no;
+
+select min(if(occupation = 'doctor',name,null)) as Doctor, 
+min(if(occupation = 'professor',name,null)) as Professor,
+min(if(occupation = 'singer',name,null)) as Singer,
+min(if(occupation = 'actor',name,null)) as Actor
+from 
+(select name,occupation,Row_number() over (partition by occupation order by name) as row_no from occupations) as ord group by row_no;
+
+CREATE VIEW pq AS (
+    SELECT 
+        CASE WHEN occupation = 'Doctor' THEN name END AS 'Doctor',
+        CASE WHEN occupation = 'Professor' THEN name END AS 'Professor',
+        CASE WHEN occupation = 'Singer' THEN name END AS  'Singer',
+        CASE WHEN occupation = 'Actor' THEN name END AS  'Actor',
+        ROW_NUMBER() OVER (PARTITION BY occupation ORDER BY name) as cr
+    FROM occupations
+);
+SELECT MAX(Doctor),MAX(Professor),MAX(Singer),MAX(Actor) FROM pq 
+GROUP BY cr
+
+
+with doctor as (Select name,ROW_NUMBER() OVER(order by name) as rn FROM    OCCUPATIONS WHERE occupation LIKE 'Doctor')
+,professor as (Select name,ROW_NUMBER() OVER(order by name) as rn FROM    OCCUPATIONS WHERE occupation LIKE 'Professor')
+,singer as (Select name,ROW_NUMBER() OVER(order by name) as rn FROM    OCCUPATIONS WHERE occupation LIKE 'Singer')
+,actor as (Select name,ROW_NUMBER() OVER(order by name) as rn FROM    OCCUPATIONS WHERE occupation LIKE 'Actor')
+SELECT d.name,p.name,s.name,a.name FROM professor p
+LEFT JOIN doctor d on d.rn = p.rn
+LEFT JOIN singer s on s.rn = p.rn
+LEFT JOIN actor a on a.rn = p.rn    //this is not ideal solution
+------------------------------------------------------------------------------
+Advance select - Binary tree node
+select n, case when p is null then 'Root'
+     when n in (select p from bst where p is not null group by p) then 'Inner'
+               else 'Leaf'
+          end     
+from bst order by n;
+------------------------------------------------------------------------------
+Advance select - New company
+select a.company_code,a.founder,count(distinct b.lead_manager_code),count(distinct b.senior_manager_code),count(distinct b.manager_code),count(distinct b.employee_code) from company a inner join employee b on a.company_code=b.company_code group by a.company_code,a.founder order by a.company_code
+
+------------------------------------------------------------------------------
+
+Revising Aggregations-The count function
+select count(*) from city where population>100000;
+
+Revising Aggregations-The Sum function
+select sum(population) from city where district='california';
+
+Revising Aggregations-The Average function
+select avg(population) from city where district='california';
+
+Average population
+select round(avg(Population),0) from City;
+
+Japan population
+select sum(population) from city where countrycode='jpn';
+
+population density difference
+select max(population) - min(population) from city;
+
+The Blunder(round up next integer)
+SELECT CEIL(AVG(Salary)-AVG(REPLACE(SALARY, '0', ''))) FROM EMPLOYEES;
+//CEIL(3.9) is 4
+
+Aggregations-Top Earners(group by)
+Note->Every derived table must have its own alias(forcefully using a)
+select max(salary*months),count(*) from employee where (salary*months)= (select max(salary*months) from employee);
+
+select earnings,count(earnings) from (select *,salary*months earnings from employee) a(imp) group by earnings order by earnings desc limit 1;
+
+select salary*months as earnings,count(*) from employee a group by earnings order by earnings desc limit 1 ;//(*or any col) represent how many row marge
+
+2-SELECT ROUND(SUM(LAT_N),2),ROUND(SUM(LONG_W),2) FROM STATION;
+13-SELECT ROUND(SUM(LAT_N),4) FROM STATION WHERE LAT_N>38.7880 AND LAT_N<137.2345;
+14-SELECT ROUND(MAX(LAT_N),4) FROM STATION WHERE LAT_N<137.2345;
+15-SELECT ROUND(LONG_W,4) FROM STATION WHERE LAT_N=(SELECT MAX(LAT_N) FROM STATION WHERE LAT_N<137.2345);
+16-SELECT ROUND(MIN(LAT_N),4) FROM STATION WHERE LAT_N>38.7780;
+17-SELECT ROUND(LONG_W,4) FROM STATION WHERE LAT_N=(SELECT MIN(LAT_N) FROM STATION WHERE LAT_N>38.7780);
+18-select round((max(lat_n)-min(lat_n)) + (max(long_w)-min(long_w)),4) from station;
+19-select round(sqrt(((max(lat_n)-min(lat_n)) * (max(lat_n)-min(lat_n))) + (((max(long_w)-min(long_w)) * (max(long_w)-min(long_w))))),4) from station;
+20*-
+select round(lat_n,4) from (
+select row_number() over(order by lat_n asc) as rnk, lat_n from station) a
+where rnk = (select round(count(*)/2) from station)
+
+select round(S.lat_n,4) from station S where (select count(lat_n) from station where lat_n< S.lat_n) = (select count(lat_n) from station where lat_n > S.lat_n);
+
+with CTE as (select lat_n, row_number() over (order by lat_n asc) as rn, count(*) over () as CNT from station ) 
+select round(lat_n,4) from CTE where rn = (CNT +1)/2
+
+Set @row_count = (select cast(floor(count(*)/2) As signed) from station);
+Prepare stmt from 'select round(lat_n,4) from station order by lat_n limit 1 offset?';
+execute stmt using @row_count;
+
+Set @rowindex := -1;
+select round(avg(N.Lat_n),4) from (select @rowindex := @rowindex + 1 as rowindex, station.lat_n as lat_n from station order by station.lat_n) as n where n.rowindex in (floor(@rowindex /2), ceil(@rowindex /2 ));
+
+Basic join--
+
+Population Census-
+select sum(city.population) from city inner join country on city.countrycode = country.code where continent = 'Asia';
+select sum(city.population) from city,country where  city.countrycode = country.code And continent = 'Asia';
+------------------------------------------------------------------------------
+African cities-
+select city.name from city join country on CITY.CountryCode = COUNTRY.Code where CONTINENT = 'Africa';
+select city.name from city,country where CITY.CountryCode = COUNTRY.Code And CONTINENT = 'Africa';
+------------------------------------------------------------------------------
+Average Population of Each Continent*-
+select country.continent,floor(avg(city.population)) from city join country on city.countrycode = country.code group by country.continent;
+
+The Report*-(note needed g. because both having different coulmns)
+select case when g.grade >= 8 then s.name else 'NULL' End, g.grade,s.marks 
+from students s, grades g where s.marks >= Min_Mark and s.marks       <=Max_Mark order by g.grade desc,s.name,s.marks;
+
+select if(grade < 8,NULL,name),grade,marks from Students s inner join Grades g where s.marks between g.min_mark and g.max_mark order by grade desc,name,marks;
+------------------------------------------------------------------------------
+Top Compititors***--
+select A.hacker_id,B.name from submissions as A inner join hackers as B on A.hacker_id = B.hacker_id inner join challenges as C on A.challenge_id = C.challenge_id inner join difficulty as D on C.difficulty_level = D.difficulty_level where A.score = D.score group by A.hacker_id,B.name having count(*) >1 order by count(*) desc,A.hacker_id;
+
+------------------------------------------------------------------------------
+Ollivander's Inventory--
+
+
+
+
+
+__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+LeetCode=>
+1)197 rising temperature-
+select w2.id from weather w1 join weather w2 on datediff(w1.recordDate, w2.recordDate) = -1 where w2.temperature > w1.temperature
+
+with cte as(select *,date_add(recorddate, interval -1 day)as yesterdays_date, lag(recorddate) over (order by recorddate) as prev_recordDate, lag(temperature) over(order by recorddate) as prev_temp from weather)
+select id from cte where yesterdays_date = prev_recordDate and temperature > prev_temp;
+//Partial true if continous date
+select id from (select id, case when temperature > prev_day then 1 else 0 end as diff from (select *,lag(temperature) over(order by recordDate) prev_day from weather)a)b where diff=1
+
+2)1075(Project Employees I)=>
+select project_id,round(avg(experience_years),2) as average_years  from project,employee where project.employee_id = employee.employee_id group by project_id
+
+3)1633(percentage of users attended a contest)=>
+select contest_id,round((count(*)/(select count(user_id) from users))*100,2) as percentage from register group by contest_id order by percentage desc,contest_id
+
+2356(Number of unique Subjects Taught by each teacher)=>
+select teacher_id,count(distinct subject_id) as cnt from teacher group by teacher_id
+
+1141(User Activity for the Past 30 Days I)
+select activity_date as day, count(distinct user_id) as active_users from activity where activity_date >= DATE_SUB('2019-07-27',Interval 29 day) and activity_date <= '2019-07-27' group by activity_date
+
+select activity_date as day, count(distinct user_id) as active_users from activity where activity_date >= '2019-06-28' and activity_date <= '2019-07-27' group by activity_date
+
+//partial works
+SELECT activity_date AS day, COUNT(DISTINCT user_id) AS active_users FROM Activity WHERE DATEDIFF("2019-07-27", activity_date) < 30 
+GROUP BY activity_date
+
+1070(Product sales Analysis III)
+select product_id,year as first_year,quantity,price from sales where (product_id,year) in (select product_id,min(year) from sales group by product_id)
+select product_id,year as first_year,quantity,price from (select *,dense_rank() over (partition by product_id order by year) as row_num from sales)as ranked  where row_num =1;
+
+select product_id,year as first_year,quantity,price from (select *,rank() over (partition by product_id order by year) as row_num from sales)as ranked  where row_num =1;
+
+1211(Queries Quality and percentage)
+select query_name,round(avg(rating/position),2) as quality, round(avg(if(rating<3,1,0))*100,2) as poor_query_percentage from queries where query_name is not null group by query_name
+
+1193(Montly Transaction I)
+select date_format(trans_date,'%Y-%m') as month,country,count(*) as trans_count,sum(if(state='approved',1,0)) as approved_count,sum(amount) as trans_total_amount,sum(if(state = 'approved',amount,0)) as approved_total_amount from transactions group by country,month
+
+1174(Immediate Food Delivery-II)
+select round(count(row_num)*100/(select count(distinct customer_id) from delivery),2) as immediate_percentage from (select *,row_number() over(
+partition by customer_id order by order_date) as row_num from delivery) as cte where order_date = customer_pref_delivery_date and row_num =1;
+
+select round(sum(if(order_date = customer_pref_delivery_date,1,0))*100/count(distinct customer_id),2) as immediate_percentage from delivery where(customer_id,order_date) in (select customer_id, min(order_date) as first_delivery from delivery group by customer_id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE serial_dates (
+    serial_no INT,
+    date DATE
+);
+INSERT INTO serial_dates (serial_no, date) VALUES
+(1001, '2024-03-01'),
+(1001, '2024-03-05'),
+(1002, '2024-03-02'),
+(1002, '2024-03-04'),
+(1003, '2024-03-03');
+SELECT serial_no, date
+FROM (
+    SELECT 
+        serial_no, 
+        date, 
+        ROW_NUMBER() OVER (PARTITION BY serial_no ORDER BY date) AS row_num
+    FROM serial_dates
+) AS ranked
+WHERE row_num = 3;
